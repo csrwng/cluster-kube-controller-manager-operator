@@ -42,7 +42,7 @@ func NewRenderCommand(errOut io.Writer) *cobra.Command {
 	}
 	cmd := &cobra.Command{
 		Use:   "render",
-		Short: "Render kubernetes controller manager bootstrap manifests, secrets and configMaps",
+		Short: "Render kubernetes controller manager manifests, secrets and configMaps",
 		Run: func(cmd *cobra.Command, args []string) {
 			must := func(fn func() error) {
 				if err := fn(); err != nil {
@@ -208,6 +208,7 @@ func (r *renderOpts) Run() error {
 		genericrenderoptions.Template{FileName: "defaultconfig.yaml", Content: v411_00_assets.MustAsset(filepath.Join(bootstrapVersion, "kube-controller-manager", "defaultconfig.yaml"))},
 		mustReadTemplateFile(filepath.Join(r.generic.TemplatesDir, "config", "bootstrap-config-overrides.yaml")),
 		mustReadTemplateFile(filepath.Join(r.generic.TemplatesDir, "config", "config-overrides.yaml")),
+		mustReadTemplateFile(filepath.Join(r.generic.TemplatesDir, "config", "hosted-config-overrides.yaml")),
 		&renderConfig,
 		nil,
 	); err != nil {

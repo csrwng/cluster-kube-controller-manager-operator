@@ -1,0 +1,72 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: kube-controller-manager
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kube-controller-manager
+  template:
+    metadata:
+      labels:
+        openshift.io/control-plane: "true"
+        openshift.io/component: "controller-manager"
+        app: kube-controller-manager
+      annotations:
+        openshift.io/run-level: "0"
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: kube-controller-manager
+        image: {{ .Image }}
+        imagePullPolicy: {{ .ImagePullPolicy }}
+        ports:
+          - containerPort: 10257
+        command: ["hyperkube", "kube-controller-manager"]
+        args:
+        - --openshift-config=/etc/kubernetes/config/{{ .ConfigFileName }}
+        - --kubeconfig=/etc/kubernetes/cmkubeconfig/kubeconfig
+        volumeMounts:
+        - mountPath: /var/run/kubernetes
+          name: certdir
+        - mountPath: /etc/kubernetes/secrets
+          name: secrets
+          readOnly: true
+        - mountPath: /etc/kubernetes/cloud
+          name: etc-kubernetes-cloud
+          readOnly: true
+        - mountPath: /etc/kubernetes/config
+          name: config
+          readOnly: true
+        - mountPath: /etc/kubernetes/cmkubeconfig
+          name: kubeconfig
+          readOnly: true
+        - mountPath: /var/log/kube-controller-manager
+          name: logs
+        workingDir: /var/log/kube-controller-manager
+        livenessProbe:
+          httpGet:
+            scheme: HTTPS
+            port: 10257
+            path: healthz
+          initialDelaySeconds: 45
+          timeoutSeconds: 10
+      volumes:
+      - secret:
+          secretName: control-plane-certificates
+        name: secrets
+      - emptyDir: {}
+        name: etc-kubernetes-cloud
+      - configMap:
+          name: kube-controller-manager-config
+        name: config
+      - emptyDir: {}
+        name: logs
+      - emptyDir: {}
+        name: certdir
+      - secret:
+          secretName: controller-manager-kubeconfig
+        name: kubeconfig

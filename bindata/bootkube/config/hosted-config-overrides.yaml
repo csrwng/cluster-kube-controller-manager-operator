@@ -1,0 +1,23 @@
+apiVersion: kubecontrolplane.config.openshift.io/v1
+kind: KubeControllerManagerConfig
+extendedArguments:
+  root-ca-file:
+  - "/etc/kubernetes/secrets/kube-apiserver-complete-server-ca-bundle.crt"
+  service-account-private-key-file:
+  - "/etc/kubernetes/secrets/service-account.key"
+  cluster-signing-cert-file:
+  - "/etc/kubernetes/secrets/kubelet-signer.crt"
+  cluster-signing-key-file:
+  - "/etc/kubernetes/secrets/kubelet-signer.key"
+  authentication-kubeconfig:
+  - "/etc/kubernetes/cmkubeconfig/kubeconfig"
+  authorization-kubeconfig:
+  - "/etc/kubernetes/cmkubeconfig/kubeconfig"
+  {{if .ClusterCIDR }}
+  cluster-cidr: {{range .ClusterCIDR}}
+  - {{.}}{{end}}
+  {{end}}
+  {{if .ServiceClusterIPRange }}
+  service-cluster-ip-range: {{range .ServiceClusterIPRange}}
+  - {{.}}{{end}}
+  {{end}}
